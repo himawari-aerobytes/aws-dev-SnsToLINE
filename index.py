@@ -8,10 +8,12 @@ def lambda_handler(event, context):
     access_token = os.environ['ACCESS_TOKEN']
     
     # SNSトピックからのメッセージを取得する
-    message = json.loads(event['Records'][0]['Sns']['Message'])['default']
+    targetMessage = event.get('Records')[0].get('Sns','{}').get('Message')
+    message = targetMessage
+    
     
     # LINE Notifyに送信するメッセージ
-    line_message = f"SNSトピックからのメッセージ: {message}"
+    line_message = f"VPN Server アラーム: {message}"
     
     # LINE Notify APIのURL
     url = 'https://notify-api.line.me/api/notify'
@@ -25,10 +27,14 @@ def lambda_handler(event, context):
     # LINE Notify APIに送信するデータ
     data = urllib.parse.urlencode({'message': line_message}).encode('utf-8')
     
+    print("送信開始")
+    
     # LINE Notify APIにPOSTリクエストを送信する
     req = urllib.request.Request(url, data, headers)
     with urllib.request.urlopen(req) as res:
         body = res.read().decode('utf-8')
+        
+    print("送信終了")
     
     # レスポンスのログを出力する
     print(body)
